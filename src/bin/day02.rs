@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use std::hash::Hash;
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let input = include_str!("./input02.txt");
     let part1 = solve(input, false);
     println!("{}", part1);
     let part2 = solve(input, true);
@@ -65,23 +64,32 @@ fn solve(p0: &str, part2: bool) -> i32 {
 mod tests {
     use crate::solve;
 
+    use indoc::indoc;
+
     #[test]
     fn part1_might_work() {
-        let result = solve("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green", false);
-        assert_eq!(result, 8)
+        let input = indoc! {"
+        Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+        Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+        Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+        Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+        Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"
+    };
+        let result = solve(input, false);
+        assert_eq!(result, 8);
     }
 
     #[test]
     fn part2_might_work() {
-        let result = solve("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green", true);
+        let input = indoc! {"
+        Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+        Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+        Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+        Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+        Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"
+    };
+        let result = solve(input, true);
         assert_eq!(result, 2286);
     }
+
 }
