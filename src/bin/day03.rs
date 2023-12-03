@@ -3,9 +3,9 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 fn main() {
-    let input = include_str!("./input03.txt");
+    let input = include_str!("./inputs/input03.txt");
     let both = solve(input);
-    dbg!(both);
+    println!("Part1: {}, Part2: {}", both.0, both.1);
 }
 
 fn solve(p0: &str) -> (i32, i32) {

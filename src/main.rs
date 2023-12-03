@@ -8,7 +8,7 @@ fn main() {
     if let Ok(files) = fs::read_dir("src/bin") {
         for file in files.filter_map(|f| f.ok()) {
             let path = file.path();
-            if path.extension().unwrap() == "rs" {
+            if path.is_file() && path.extension().unwrap() == "rs" {
                 days.push(path);
             }
         }
