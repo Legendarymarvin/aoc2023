@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 indoc = { version = "2.0.4", features = [] }
+regex = "1.10.2"
+itertools = "0.12.0"
+rayon = "1.8.0"
