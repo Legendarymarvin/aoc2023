@@ -53,6 +53,37 @@ fn solve(p0: &str) -> (i32, i32) {
     right = filter_loop_and_outside_matrix(&mut right, &looping, max);
     mark_unmarked_as_right_or_left(&matrix, &mut left, &mut right, &looping);
 
+    let do_vis = true;
+    if do_vis {
+        let mut lines = vec![];
+        for y in 0..matrix.len() {
+            let mut line = String::new();
+            for x in 0..matrix.len() {
+                let node = &Node{x: x as i32, y: y as i32};
+                if left.contains(node) {
+                    line.push('#');
+                } else if looping.contains(node) {
+                    line.push(match node.get_tile(&matrix) {
+                        Start => 'S',
+                        Horizontal => '─',
+                        Vertical => '│',
+                        NorthEast => '└',
+                        NorthWest => '┘',
+                        SouthWest => '┐',
+                        SouthEast => '┌',
+                        Ground => '.'
+                    })
+                } else {
+                    line.push('.');
+                }
+            }
+            lines.push(line);
+        }
+        for line in lines {
+            println!("{}", line);
+        }
+    }
+
     let count_inside = if left.contains(&Node { x: 0, y: 0 }) { right.len() } else {left.len()};
     ((counter) / 2, count_inside as i32)
 }
