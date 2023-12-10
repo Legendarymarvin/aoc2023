@@ -12,16 +12,8 @@ fn main() {
 fn solve(p0: &str) -> (i32, i32) {
     let (start, matrix) = read_pipe_matrix(p0);
     let origin = Node { x: start.1 as i32, y: start.0 as i32 };
-    let mut tile = get_start_tile(&matrix, origin);
-    let mut dir: Direction = match tile {
-        Vertical => South,
-        Horizontal => East,
-        NorthEast => East,
-        NorthWest => North,
-        SouthWest => West,
-        SouthEast => South,
-        _ => panic!()
-    };
+    let mut tile = Start;
+    let mut dir = get_start_dir(origin, &matrix);
     let mut current = origin.clone();
     let mut counter = 0;
     let mut left: HashSet<Node> = HashSet::new();
@@ -65,41 +57,18 @@ fn solve(p0: &str) -> (i32, i32) {
     ((counter) / 2, count_inside as i32)
 }
 
-fn get_start_tile(matrix: &Vec<Vec<Tile>>, node: Node) -> Tile {
-    let max = matrix.len() as i32;
-    if node.y > 0 && vec![Vertical, SouthEast, SouthWest].contains(&node.north().get_tile(matrix)) {
-        if [Vertical, NorthWest, NorthEast].contains(&node.south().get_tile(matrix)) {
-            return Vertical
-        } else if [Horizontal, NorthEast, SouthEast].contains(&node.west().get_tile(matrix)) {
-            return NorthWest
-        } else if [Horizontal, NorthWest,SouthWest].contains(&node.east().get_tile(matrix)) {
-            return NorthEast
-        }
-    }
-    if node.x > 0 && vec![Horizontal, NorthEast, SouthEast].contains(&node.west().get_tile(matrix)) {
-        if vec![Horizontal, NorthWest, SouthWest].contains(&node.east().get_tile(matrix)) {
-            return Horizontal
-        } else if vec![Vertical, NorthEast, NorthWest].contains(&node.south().get_tile(matrix)) {
-            return SouthWest
-        } else if vec![Vertical, SouthWest, SouthEast].contains(&node.north().get_tile(matrix)) {
-            return NorthWest
-        }
-    }
-    if node.x < max && vec![Horizontal, NorthWest, SouthWest].contains(&node.east().get_tile(matrix)) {
-       if vec![Vertical, NorthEast, NorthWest].contains(&node.south().get_tile(matrix)) {
-           return SouthEast
-       } else if [Vertical, SouthWest, SouthEast].contains(&node.north().get_tile(matrix)) {
-           return NorthEast
-       }
-    }
-    if node.y < max && vec![Vertical, NorthEast, NorthWest].contains(&node.south().get_tile(matrix)) {
-        if vec![Horizontal, SouthEast, NorthEast].contains(&node.west().get_tile(matrix)) {
-            return SouthWest
-        } else if vec![Horizontal, SouthWest, NorthWest].contains(&node.east().get_tile(matrix)) {
-            return SouthEast
-        }
-    }
-    panic!("Uh oh...");
+fn get_start_dir(p0: Node, matrix: &Vec<Vec<Tile>>) -> Direction {
+    return if vec![Horizontal, SouthWest, NorthWest].contains(&p0.east().get_tile(matrix)) {
+        East
+    } else if vec![Horizontal, SouthEast, NorthEast].contains(&p0.west().get_tile(matrix)) {
+        West
+    } else if vec![Vertical, NorthEast, NorthWest].contains(&p0.south().get_tile(matrix)) {
+        South
+    } else if vec![Vertical, SouthEast, SouthWest].contains(&p0.north().get_tile(matrix)) {
+        North
+    } else {
+        panic!("Where to?");
+    };
 }
 
 fn mark_unmarked_as_right_or_left(matrix: &Vec<Vec<Tile>>, left: &mut HashSet<Node>, right: &mut HashSet<Node>, looping: &HashSet<Node>) {
@@ -315,7 +284,7 @@ impl Direction {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_start_tile, Node, solve, Tile};
+    use crate::{solve};
 
     use indoc::indoc;
 
@@ -346,112 +315,4 @@ LJ.LJ
         assert_eq!(part1.1, 451);
     }
 
-
-    fn create_test_matrix() -> Vec<Vec<Tile>> {
-        vec![vec![Tile::Ground; 3]; 3]
-    }
-
-    #[test]
-    fn test_horizontal() {
-        let mut matrix = create_test_matrix();
-        let node = Node { x: 1, y: 1 };
-
-        matrix[0][1] = Tile::Vertical;
-        matrix[2][1] = Tile::Vertical;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::Vertical);
-
-        matrix[0][1] = Tile::Vertical;
-        matrix[2][1] = Tile::NorthEast;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::Vertical);
-    }
-
-    #[test]
-    fn test_vertical() {
-        let mut matrix = create_test_matrix();
-        let node = Node { x: 1, y: 1 };
-
-        matrix[1][0] = Tile::Horizontal;
-        matrix[1][2] = Tile::Horizontal;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::Horizontal);
-
-        matrix[1][0] = Tile::SouthEast;
-        matrix[1][2] = Tile::NorthWest;
-        assert_eq!(get_start_tile(&matrix, node), Tile::Horizontal);
-    }
-
-    #[test]
-    fn test_north_east() {
-        let mut matrix = create_test_matrix();
-        let node = Node { x: 1, y: 1 };
-
-        matrix[0][1] = Tile::Vertical;
-        matrix[1][2] = Tile::Horizontal;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::NorthEast);
-
-        matrix[0][1] = Tile::SouthEast;
-        matrix[1][2] = Tile::NorthWest;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::NorthEast);
-    }
-
-    #[test]
-    fn test_north_west() {
-        let mut matrix = create_test_matrix();
-        let node = Node { x: 1, y: 1 };
-
-        matrix[0][1] = Tile::Vertical;
-        matrix[1][0] = Tile::Horizontal;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::NorthWest);
-
-        matrix[0][1] = Tile::SouthWest;
-        matrix[1][0] = Tile::SouthEast;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::NorthWest);
-    }
-
-    #[test]
-    fn test_south_east() {
-        let mut matrix = create_test_matrix();
-        let node = Node { x: 1, y: 1 };
-
-        matrix[2][1] = Tile::Vertical;
-        matrix[1][2] = Tile::Horizontal;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::SouthEast);
-
-        matrix[2][1] = Tile::Vertical;
-        matrix[1][2] = Tile::NorthWest;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::SouthEast);
-    }
-
-    #[test]
-    fn test_south_west() {
-        let mut matrix = create_test_matrix();
-        let node = Node { x: 1, y: 1 };
-
-        matrix[2][1] = Tile::Vertical;
-        matrix[1][0] = Tile::Horizontal;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::SouthWest);
-
-        matrix[2][1] = Tile::NorthEast;
-        matrix[1][0] = Tile::NorthEast;
-
-        assert_eq!(get_start_tile(&matrix, node), Tile::SouthWest);
-    }
-
-    #[test]
-    #[should_panic(expected = "Uh oh...")]
-    fn test_panic_case() {
-        let matrix = create_test_matrix();
-        let node = Node { x: 1, y: 1 };
-
-        get_start_tile(&matrix, node);
-    }
 }
