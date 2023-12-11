@@ -8,151 +8,80 @@ fn main() {
 }
 
 fn solve(p0: &str, expansion: usize) -> (usize, usize) {
-    let galaxy = read_and_expand_map(p0);
+    let (empty_rows, empty_columns, galaxy) = read_map(p0);
     let stars: Vec<(usize, usize)> = map_stars(&galaxy);
+
     let mut distances: HashMap<((usize, usize), (usize, usize)), usize> = HashMap::new();
-    for star in stars.clone().iter().cloned() {
-        for other_star in stars.iter().cloned() {
-            if star == other_star {
-                continue;
-            }
-            if distances.contains_key(&(star, other_star)) || distances.contains_key(&(other_star, star)) {
-                continue
-            }
-            let y_distance = usize::max(star.0, other_star.0) - usize::min(star.0, other_star.0);
-            let x_distance = usize::max(star.1, other_star.1) - usize::min(star.1, other_star.1);
-            distances.insert((star, other_star), y_distance + x_distance);
-        }
-    }
+    fill_distances(2, &empty_rows, &empty_columns, &stars, &mut distances);
+    let part1 = distances.values().sum();
 
-    let (empty_rows, empty_columns, galaxy) = ignore_empty_rows(p0);
-    let stars: Vec<(usize, usize)> = map_stars(&galaxy);
-
-    let mut big_distances: HashMap<((usize, usize), (usize, usize)), usize> = HashMap::new();
-    dbg!(galaxy);
-    dbg!(&stars);
-    for star in stars.clone().iter().cloned() {
-        for other_star in stars.iter().cloned() {
-            if star == other_star {
-                continue;
-            }
-            if big_distances.contains_key(&(star, other_star)) || big_distances.contains_key(&(other_star, star)) {
-                continue
-            }
-            dbg!(star, other_star);
-            let big_y = usize::max(star.0, other_star.0);
-            let small_y = usize::min(star.0, other_star.0);
-            let big_x = usize::max(star.1, other_star.1);
-            let small_x = usize::min(star.1, other_star.1);
-            let mut y_distance = big_y - small_y;
-            let mut x_distance = big_x - small_x;
-
-            for i in small_y..big_y {
-                if empty_rows.contains(&i) {
-                    y_distance = y_distance + expansion - 1;
-                }
-            }
-
-            for i in small_x..big_x {
-                if empty_columns.contains(&i) {
-                    x_distance = x_distance + expansion - 1;
-                }
-            }
-
-            dbg!(y_distance, x_distance);
-            big_distances.insert((star, other_star), y_distance + x_distance);
-        }
-    }
+    distances.clear();
+    fill_distances(expansion, &empty_rows, &empty_columns, &stars, &mut distances);
+    let part2 = distances.values().sum();
 
 
-    (distances.values().sum(), big_distances.values().sum())
+    (part1, part2)
 }
-fn ignore_empty_rows(p0: &str) -> (Vec<usize>, Vec<usize>, Vec<Vec<char>>) {
-    let mut empty_rows: Vec<usize> = vec![];
-    // as everyone knows, galaxies are quadratic
-    let mut empty_columns = vec![];
-    let mut gal:Vec<Vec<char>> = vec![];
 
+fn fill_distances(expansion: usize, empty_rows: &Vec<usize>, empty_columns: &Vec<usize>, stars: &Vec<(usize, usize)>, big_distances: &mut HashMap<((usize, usize), (usize, usize)), usize>) {
+    stars.iter()
+        .flat_map(|&star| {
+            stars.iter()
+                .filter_map(move |&other_star| if other_star != star { Some((star, other_star)) } else { None })
+        }).for_each(|(star, other_star)| {
+        if star == other_star || big_distances.contains_key(&(star, other_star)) || big_distances.contains_key(&(other_star, star)) {
+            return;
+        }
 
-    for (y, line) in p0.lines().enumerate() {
-        let mut row = vec![];
-        for (x, char) in line.chars().enumerate() {
-            row.push(char);
-        }
-        gal.push(row);
-    }
+        let (small_y, big_y) = vec![star.0, other_star.0].iter().cloned().sorted().collect_tuple().unwrap();
+        let (small_x, big_x) = vec![star.1, other_star.1].iter().cloned().sorted().collect_tuple().unwrap();
 
-    let mut transposed = transpose(dbg!(gal));
-    for (i, line) in transposed.iter().enumerate() {
-        if line.iter().all(|c| *c == '.') {
-            empty_columns.push(i);
-        }
-    }
-    let mut actual = transpose(dbg!(transposed));
-    for (i, line) in actual.iter().enumerate() {
-        if line.iter().all(|c| *c == '.') {
-            empty_rows.push(i);
-        }
-    }
-    (empty_rows, empty_columns, actual)
+        let y_distance = (big_y - small_y)
+            + (small_y..big_y).into_iter()
+            .filter(|i| empty_rows.contains(&i))
+            .count() * (expansion - 1);
+
+        let x_distance = (big_x - small_x)
+            + (small_x..big_x).into_iter()
+            .filter(|i| empty_columns.contains(&i))
+            .count() * (expansion - 1);
+
+        big_distances.insert((star, other_star), y_distance + x_distance);
+    });
+}
+
+fn read_map(p0: &str) -> (Vec<usize>, Vec<usize>, Vec<Vec<char>>) {
+    let gal: Vec<Vec<char>> = p0.lines()
+        .map(|line| line.chars().collect())
+        .collect();
+
+    let empty_columns = transpose(&gal)
+        .into_iter()
+        .enumerate()
+        .filter_map(|(i, line)| if line.iter().all(|c| *c == '.') { Some(i) } else { None })
+        .collect();
+
+    let empty_rows = gal.iter().enumerate()
+        .filter_map(|(i, line)| if line.iter().all(|c| *c == '.') { Some(i) } else { None })
+        .collect();
+
+    (empty_rows, empty_columns, gal)
 }
 
 fn map_stars(p0: &Vec<Vec<char>>) -> Vec<(usize, usize)> {
-    let mut stars = vec![];
-    for (y, row) in p0.iter().enumerate() {
-        for (x, char) in row.iter().enumerate() {
-            if *char == '#' {
-                stars.push((y, x));
-            }
-        }
-    }
-    stars
+    p0.iter().enumerate()
+        .flat_map(|(y, line)| {
+            line.iter().enumerate()
+                .filter_map(move |(x, c)| if *c == '#' { Some((y, x)) } else { None })
+        }).collect()
 }
 
-fn read_and_expand_map(p0: &str) -> Vec<Vec<char>> {
-
-
-    let mut gal:Vec<Vec<char>> = vec![];
-
-
-    for (y, line) in p0.lines().enumerate() {
-        let mut row = vec![];
-        for (x, char) in line.chars().enumerate() {
-            row.push(char);
-        }
-        gal.push(row);
-    }
-
-    let mut transposed = transpose(dbg!(gal));
-    let mut expanded = vec![];
-    for line in transposed {
-        expanded.push(line.clone());
-        if line.iter().all(|c| *c == '.') {
-            expanded.push(line.clone());
-        }
-    }
-    let mut actual = transpose(dbg!(expanded));
-    let mut expanded = vec![];
-    for line in actual {
-        expanded.push(line.clone());
-        if line.iter().all(|c| *c == '.') {
-            expanded.push(line.clone());
-        }
-    }
-    dbg!(expanded)
-}
-
-fn transpose(p0: Vec<Vec<char>>) -> Vec<Vec<char>> {
-    let mut transposed = vec![];
-    for (j, row) in p0.iter().enumerate() {
-        for (i, char) in row.iter().enumerate() {
-            if (j == 0) {
-                transposed.push(vec![]);
-            }
-            transposed[i].push(*char);
-        }
-    }
-    transposed
+fn transpose(p0: &Vec<Vec<char>>) -> Vec<Vec<char>> {
+    p0.iter()
+        .fold(vec![Vec::new(); p0[0].len()], |mut acc, row| {
+            row.iter().enumerate().for_each(|(i, c)| acc[i].push(*c));
+            acc
+        })
 }
 
 #[cfg(test)]
@@ -195,10 +124,9 @@ mod tests {
 
     #[test]
     fn still_working() {
-        let input = include_str!("./inputs/input10");
+        let input = include_str!("./inputs/input11");
         let part1 = solve(input, 1000000);
-        assert_eq!(part1.0, 6838);
-        assert_eq!(part1.1, 451);
+        assert_eq!(part1.0, 10165598);
+        assert_eq!(part1.1, 678728808158);
     }
-
 }
