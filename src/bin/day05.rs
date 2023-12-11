@@ -5,7 +5,7 @@ use itertools::Itertools;
 use crate::Relations::{FertilizerToWater, HumidityToLocation, LightToTemperature, SeedToSoil, SoilToFertilizer, TemperatureToHumidity, WaterToLight};
 
 fn main() {
-    let input = include_str!("./inputs/fuckyou.txt");
+    let input = include_str!("inputs/input05.txt");
     let part1 = solve(input, false);
     let part2 = solve(input, true);
     println!("Part1: {}, Part2: {}", part1.0, part2.0);
