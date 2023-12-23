@@ -195,11 +195,12 @@ mod tests {
         input
     }
 
-    // #[test]
-    // fn still_working() {
-    //     let input = include_str!("./inputs/input22");
-    //     let (part1, part2) = solve(input, );
-    //     assert_eq!(part1, 517);
-    //     assert_eq!(part2, 61276);
-    // }
+    #[test]
+    fn still_working() {
+        let input = include_str!("./inputs/input22");
+        let part1 = solve(input, false);
+        let part2 = solve(input, true);
+        assert_eq!(part1, 2110);
+        assert_eq!(part2, 6514);
+    }
 }
