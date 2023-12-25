@@ -53,7 +53,7 @@ pub fn solve(input: &str) -> usize {
         })
         .into_iter()
         .max_by_key(|&(_, count)| count)
-        .map(|(val, _)| val).unwrap()
+        .map(|(val, _)| val).expect("There should be a most common solution")
 
     // //graphviz solution
     //let dot = graph_to_dot(&graph);
